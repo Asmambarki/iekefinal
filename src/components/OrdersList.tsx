@@ -230,8 +230,8 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
           <p className="text-gray-400 text-sm">Aucune commande trouvée</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-visible">
-          <div className="overflow-x-auto overflow-y-visible">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+          <div className="overflow-x-auto" style={{overflow: 'visible'}}>
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50/70">
@@ -247,13 +247,13 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-50 overflow-visible">
                 {currentOrders.map((order) => {
                   const isNew = !order.isViewed;
                   return (
                     <tr
                       key={order.id}
-                      className={`group transition-colors ${isNew ? "bg-blue-50/40 hover:bg-blue-50/70" : "hover:bg-gray-50/60"}`}
+                      className={`group transition-colors relative ${isNew ? "bg-blue-50/40 hover:bg-blue-50/70" : "hover:bg-gray-50/60"}`}
                     >
                       {/* Order number */}
                       <td className="px-5 py-3.5 whitespace-nowrap">
@@ -428,6 +428,7 @@ function StatusDropdown({
   isUpdating: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
   const ref = useRef<HTMLDivElement>(null);
   const cfg = STATUS_CONFIG[status] ?? { label: status, dot: "bg-gray-400", badge: "bg-gray-50 text-gray-600 ring-gray-200" };
 
@@ -440,11 +441,24 @@ function StatusDropdown({
     return () => document.removeEventListener("mousedown", handler);
   }, [isOpen]);
 
+  const handleOpen = () => {
+    if (!isUpdating) {
+      if (ref.current) {
+        const rect = ref.current.getBoundingClientRect();
+        setPosition({
+          top: rect.bottom + window.scrollY + 8,
+          left: rect.right + window.scrollX - 176,
+        });
+      }
+      setIsOpen(true);
+    }
+  };
+
   return (
     <div ref={ref} className="relative inline-block">
       <button
         disabled={isUpdating}
-        onClick={() => !isUpdating && setIsOpen((o) => !o)}
+        onClick={handleOpen}
         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ring-1 ring-inset transition-all ${cfg.badge} ${
           isUpdating ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:opacity-80"
         }`}
@@ -459,7 +473,13 @@ function StatusDropdown({
       </button>
 
       {isOpen && !isUpdating && (
-        <div className="absolute right-0 mt-1.5 w-44 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-50">
+        <div 
+          className="fixed w-44 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-50"
+          style={{
+            top: `${position.top}px`,
+            left: `${position.left}px`,
+          }}
+        >
           {STATUS_ORDER.map((s) => {
             const c = STATUS_CONFIG[s];
             return (
