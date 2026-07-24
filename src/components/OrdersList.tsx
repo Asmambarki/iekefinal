@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useAuth } from "../lib/authContext";
 import {
   Search,
@@ -230,8 +231,8 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
           <p className="text-gray-400 text-sm">Aucune commande trouvée</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-visible">
-          <div className="overflow-x-auto" style={{ overflowY: "visible" }}>
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+          <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50/70">
@@ -428,6 +429,7 @@ function StatusDropdown({
   isUpdating: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
   const ref = useRef<HTMLDivElement>(null);
   const cfg = STATUS_CONFIG[status] ?? { label: status, dot: "bg-gray-400", badge: "bg-gray-50 text-gray-600 ring-gray-200" };
 
@@ -440,32 +442,54 @@ function StatusDropdown({
     return () => document.removeEventListener("mousedown", handler);
   }, [isOpen]);
 
-  return (
-    <div ref={ref} className="relative inline-block">
-      <button
-        disabled={isUpdating}
-        onClick={() => !isUpdating && setIsOpen((o) => !o)}
-        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ring-1 ring-inset transition-all ${cfg.badge} ${
-          isUpdating ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:opacity-80"
-        }`}
-      >
-        {isUpdating ? (
-          <RefreshCw className="w-2.5 h-2.5 animate-spin" />
-        ) : (
-          <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-        )}
-        {cfg.label}
-        <ChevronDown className="w-2.5 h-2.5 opacity-60" />
-      </button>
+  const handleOpen = () => {
+    if (!isUpdating) {
+      if (ref.current?.querySelector("button")) {
+        const btn = ref.current.querySelector("button") as HTMLElement;
+        const rect = btn.getBoundingClientRect();
+        setPosition({
+          top: rect.bottom + window.scrollY + 6,
+          left: rect.left + window.scrollX,
+        });
+      }
+      setIsOpen(true);
+    }
+  };
 
-      {isOpen && !isUpdating && (
-        <div className="absolute -right-2 top-full mt-2 w-44 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-50">
+  return (
+    <>
+      <div ref={ref} className="relative inline-block">
+        <button
+          disabled={isUpdating}
+          onClick={handleOpen}
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ring-1 ring-inset transition-all ${cfg.badge} ${
+            isUpdating ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:opacity-80"
+          }`}
+        >
+          {isUpdating ? (
+            <RefreshCw className="w-2.5 h-2.5 animate-spin" />
+          ) : (
+            <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+          )}
+          {cfg.label}
+          <ChevronDown className="w-2.5 h-2.5 opacity-60" />
+        </button>
+      </div>
+
+      {isOpen && !isUpdating && createPortal(
+        <div 
+          className="fixed w-44 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-50"
+          style={{
+            top: `${position.top}px`,
+            left: `${position.left}px`,
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
           {STATUS_ORDER.map((s) => {
             const c = STATUS_CONFIG[s];
             return (
               <button
                 key={s}
-                onMouseDown={(e) => e.stopPropagation()}
                 onClick={() => { onChange(orderId, s); setIsOpen(false); }}
                 className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors ${
                   s === status ? "bg-gray-50 font-medium text-gray-900" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
@@ -476,8 +500,9 @@ function StatusDropdown({
               </button>
             );
           })}
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 }
