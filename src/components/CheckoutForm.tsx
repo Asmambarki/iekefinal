@@ -11,11 +11,40 @@ interface CheckoutFormProps {
   onBack: () => void;
 }
 
+// 24 regions of Tunisia
+const TUNISIA_REGIONS = [
+  "Ariana",
+  "Béja",
+  "Ben Arous",
+  "Bizerte",
+  "Gabès",
+  "Gafsa",
+  "Jendouba",
+  "Kairouan",
+  "Kasserine",
+  "Kébili",
+  "Kef",
+  "Mahdia",
+  "Manouba",
+  "Medenine",
+  "Monastir",
+  "Nabeul",
+  "Sfax",
+  "Sidi Bouzid",
+  "Siliana",
+  "Sousse",
+  "Tataouine",
+  "Tozeur",
+  "Tunis",
+  "Zaghouan",
+];
+
 export function CheckoutForm({ cart, total, onSuccess, onBack }: CheckoutFormProps) {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     phone: "",
+    city: "",
     address: "",
     notes: "",
   });
@@ -24,7 +53,7 @@ export function CheckoutForm({ cart, total, onSuccess, onBack }: CheckoutFormPro
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string>("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     // Clear error when user starts typing
@@ -58,6 +87,10 @@ export function CheckoutForm({ cart, total, onSuccess, onBack }: CheckoutFormPro
       newErrors.phone = "Le numéro de téléphone n'est pas valide";
     }
 
+    if (!formData.city.trim()) {
+      newErrors.city = "Veuillez sélectionner une région";
+    }
+
     if (!formData.address.trim()) {
       newErrors.address = "L'adresse complète est obligatoire";
     }
@@ -89,6 +122,7 @@ export function CheckoutForm({ cart, total, onSuccess, onBack }: CheckoutFormPro
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone,
+        city: formData.city,
         address: formData.address,
         notes: formData.notes,
         items: cart.map(item => ({
@@ -218,6 +252,35 @@ export function CheckoutForm({ cart, total, onSuccess, onBack }: CheckoutFormPro
             </div>
 
             <div>
+              <label htmlFor="city" className="block text-sm mb-2">
+                Région (Gouvernorat) <span className="text-red-600">*</span>
+              </label>
+              <select
+                id="city"
+                name="city"
+                value={formData.city}
+                onChange={handleChange}
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 ${
+                  errors.city ? "border-red-500" : "border-gray-300"
+                }`}
+                disabled={isSubmitting}
+              >
+                <option value="">-- Sélectionner une région --</option>
+                {TUNISIA_REGIONS.map((region) => (
+                  <option key={region} value={region}>
+                    {region}
+                  </option>
+                ))}
+              </select>
+              {errors.city && (
+                <div className="flex items-center gap-2 mt-2 text-red-600 text-sm">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{errors.city}</span>
+                </div>
+              )}
+            </div>
+
+            <div>
               <label htmlFor="address" className="block text-sm mb-2">
                 Adresse complète <span className="text-red-600">*</span>
               </label>
@@ -227,7 +290,7 @@ export function CheckoutForm({ cart, total, onSuccess, onBack }: CheckoutFormPro
                 value={formData.address}
                 onChange={handleChange}
                 rows={4}
-                placeholder="Numéro, rue, code postal, ville"
+                placeholder="Numéro, rue, code postal, quartier..."
                 className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 ${
                   errors.address ? "border-red-500" : "border-gray-300"
                 }`}
