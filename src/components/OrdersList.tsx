@@ -230,7 +230,7 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
           <p className="text-gray-400 text-sm">Aucune commande trouvée</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-visible">
           <div className="overflow-x-auto overflow-y-visible">
             <table className="w-full text-sm">
               <thead>
@@ -459,7 +459,7 @@ function StatusDropdown({
       </button>
 
       {isOpen && !isUpdating && (
-        <div className="absolute right-0 mt-1.5 w-44 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-[9999]">
+        <div className="absolute right-0 mt-1.5 w-44 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-50">
           {STATUS_ORDER.map((s) => {
             const c = STATUS_CONFIG[s];
             return (
