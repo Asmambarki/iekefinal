@@ -230,8 +230,8 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
           <p className="text-gray-400 text-sm">Aucune commande trouvée</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-          <div className="overflow-x-auto" style={{overflow: 'visible'}}>
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-visible">
+          <div className="overflow-x-auto" style={{ overflowY: "visible" }}>
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50/70">
@@ -428,7 +428,6 @@ function StatusDropdown({
   isUpdating: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
   const ref = useRef<HTMLDivElement>(null);
   const cfg = STATUS_CONFIG[status] ?? { label: status, dot: "bg-gray-400", badge: "bg-gray-50 text-gray-600 ring-gray-200" };
 
@@ -441,24 +440,11 @@ function StatusDropdown({
     return () => document.removeEventListener("mousedown", handler);
   }, [isOpen]);
 
-  const handleOpen = () => {
-    if (!isUpdating) {
-      if (ref.current) {
-        const rect = ref.current.getBoundingClientRect();
-        setPosition({
-          top: rect.bottom + window.scrollY + 8,
-          left: rect.right + window.scrollX - 176,
-        });
-      }
-      setIsOpen(true);
-    }
-  };
-
   return (
     <div ref={ref} className="relative inline-block">
       <button
         disabled={isUpdating}
-        onClick={handleOpen}
+        onClick={() => !isUpdating && setIsOpen((o) => !o)}
         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ring-1 ring-inset transition-all ${cfg.badge} ${
           isUpdating ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:opacity-80"
         }`}
@@ -473,13 +459,7 @@ function StatusDropdown({
       </button>
 
       {isOpen && !isUpdating && (
-        <div 
-          className="fixed w-44 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-50"
-          style={{
-            top: `${position.top}px`,
-            left: `${position.left}px`,
-          }}
-        >
+        <div className="absolute -right-2 top-full mt-2 w-44 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-50">
           {STATUS_ORDER.map((s) => {
             const c = STATUS_CONFIG[s];
             return (
