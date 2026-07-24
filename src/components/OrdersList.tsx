@@ -435,11 +435,22 @@ function StatusDropdown({
 
   useEffect(() => {
     if (!isOpen) return;
-    const handler = (e: MouseEvent) => {
+    
+    const handleClose = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false);
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    
+    const handleScroll = () => {
+      setIsOpen(false);
+    };
+    
+    document.addEventListener("mousedown", handleClose);
+    window.addEventListener("scroll", handleScroll, true);
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClose);
+      window.removeEventListener("scroll", handleScroll, true);
+    };
   }, [isOpen]);
 
   const handleOpen = () => {
@@ -478,7 +489,7 @@ function StatusDropdown({
 
       {isOpen && !isUpdating && createPortal(
         <div 
-          className="fixed w-44 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-50"
+          className="fixed w-44 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-50 pointer-events-auto"
           style={{
             top: `${position.top}px`,
             left: `${position.left}px`,
